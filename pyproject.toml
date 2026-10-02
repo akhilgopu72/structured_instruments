@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "structured-instruments"
+version = "0.1.0"
+description = "Monitoring app for autocallable structured notes"
+requires-python = ">=3.11"
+dependencies = [
+    "sqlalchemy>=2.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "typer>=0.9",
+    "rich>=13.0",
+    "yfinance>=0.2",
+    "fastapi>=0.109",
+    "uvicorn[standard]>=0.27",
+    "anthropic>=0.40",
+    "scipy>=1.12",
+    "python-dotenv>=1.0",
+    "numpy>=1.26",
+    "python-multipart>=0.0.6",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "httpx>=0.26",
+]
+
+[project.scripts]
+si = "structured_instruments.cli.app:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/structured_instruments"]

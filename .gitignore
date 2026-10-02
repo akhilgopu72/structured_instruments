@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.env
+.venv/
+venv/
+node_modules/
+frontend/dist/
+.DS_Store
+*.swp
+*.swo
+
+# Logs / runtime noise
+*.log
+nohup.out
+
+# SQLite: the main DB is intentionally tracked (see README).
+# Transient sidecar files are not.
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
