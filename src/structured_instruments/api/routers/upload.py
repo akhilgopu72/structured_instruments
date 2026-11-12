@@ -19,6 +19,7 @@ from structured_instruments.models.underlying import Underlying
 from structured_instruments.models.user import User
 from structured_instruments.models.valuation_date import ValuationDate
 from structured_instruments.schemas.instrument import ParsedInstrumentData
+from structured_instruments.services.candidates import upsert_from_parsed
 from structured_instruments.services.pdf_parser import parse_prospectus_pdf
 from structured_instruments.services.pricing import fetch_prices
 
@@ -30,6 +31,9 @@ class ParsedFile(BaseModel):
     parsed: ParsedInstrumentData | None = None
     error: str | None = None
     existing_cusip: bool = False
+    # Preliminary pricing supplement (no initial prices yet): committing it
+    # adds a candidate to the Modeling tab instead of a portfolio position.
+    preliminary: bool = False
 
 
 class ParseResponse(BaseModel):
@@ -50,7 +54,7 @@ class CommitRequest(BaseModel):
 class CommitResultItem(BaseModel):
     filename: str | None
     cusip: str
-    status: str  # "added", "position_added", "error"
+    status: str  # "added", "position_added", "candidate_added", "error"
     message: str | None = None
     prices_backfilled: dict[str, int] = {}
 
@@ -92,6 +96,7 @@ async def parse_pdfs(
                     filename=filename,
                     parsed=parsed,
                     existing_cusip=existing is not None,
+                    preliminary=parsed.is_preliminary,
                 )
             )
         except FileNotFoundError as exc:
@@ -136,6 +141,23 @@ def commit_instruments(
     for item in body.items:
         parsed = item.parsed
         try:
+            if parsed.is_preliminary:
+                candidate, created = upsert_from_parsed(
+                    session, parsed, source="upload", filename=item.filename,
+                )
+                results.append(
+                    CommitResultItem(
+                        filename=item.filename,
+                        cusip=candidate.cusip,
+                        status="candidate_added",
+                        message=(
+                            f"Preliminary supplement - added to Modeling ({candidate.offering_month})"
+                            if created else "Already in Modeling"
+                        ),
+                    )
+                )
+                continue
+
             if item.principal <= 0:
                 results.append(
                     CommitResultItem(

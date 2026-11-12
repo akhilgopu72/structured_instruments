@@ -323,6 +323,14 @@ export default function AddInstruments() {
             </ul>
           </div>
           <div className="flex items-center gap-3">
+            {commitResults.some((r) => r.status === 'candidate_added') && (
+              <button
+                onClick={() => navigate('/modeling')}
+                className="rounded-md px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+              >
+                Go to Modeling
+              </button>
+            )}
             <button
               onClick={handleReset}
               className="rounded-md px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600"
@@ -408,12 +416,18 @@ function ReviewCard({
                   Existing CUSIP — position will be added
                 </span>
               )}
+              {file.preliminary && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700">
+                  Preliminary — will be added to Modeling
+                </span>
+              )}
             </div>
             <p className="text-xs text-gray-500 font-mono">{file.filename}</p>
             {p.product_type && <p className="text-xs text-gray-400 mt-1">{p.product_type}</p>}
           </div>
         </div>
 
+        {!file.preliminary && (
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-400">Principal:</label>
           <span className="text-gray-500">$</span>
@@ -427,6 +441,7 @@ function ReviewCard({
             className="w-28 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 disabled:opacity-50"
           />
         </div>
+        )}
       </div>
 
       {/* Bond terms grid */}
@@ -459,12 +474,14 @@ function ReviewCard({
               <tr key={u.ticker} className="border-b border-gray-700/30">
                 <td className="py-1.5 font-mono text-blue-300">{u.ticker}</td>
                 <td className="py-1.5 text-gray-300">{u.name ?? '—'}</td>
-                <td className="py-1.5 text-right font-mono text-gray-200">${u.initial_price.toFixed(2)}</td>
+                <td className="py-1.5 text-right font-mono text-gray-200">
+                  {u.initial_price == null ? '—' : `$${u.initial_price.toFixed(2)}`}
+                </td>
                 <td className="py-1.5 text-right font-mono text-yellow-300">
-                  ${(u.initial_price * p.coupon_barrier_pct).toFixed(2)}
+                  {u.initial_price == null ? pct(p.coupon_barrier_pct) : `$${(u.initial_price * p.coupon_barrier_pct).toFixed(2)}`}
                 </td>
                 <td className="py-1.5 text-right font-mono text-red-300">
-                  ${(u.initial_price * p.downside_barrier_pct).toFixed(2)}
+                  {u.initial_price == null ? pct(p.downside_barrier_pct) : `$${(u.initial_price * p.downside_barrier_pct).toFixed(2)}`}
                 </td>
               </tr>
             ))}

@@ -1,0 +1,20 @@
+{
+  "source": "Rahul Halwasiya (B. Riley) preliminary pricing supplements, October 2026",
+  "pricing_date": "2026-10-30",
+  "notes": [
+    {"cusip": "83372H7B8", "issuer": "Societe Generale", "tickers": ["ASTS", "RKLB", "IREN"], "coupon_rate_annual": 0.48,   "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.50},
+    {"cusip": "63873MES8", "issuer": "Natixis",          "tickers": ["LRCX", "NOW", "SNAP"],  "coupon_rate_annual": 0.351,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.50},
+    {"cusip": "63873MEU3", "issuer": "Natixis",          "tickers": ["T", "FICO", "COIN"],    "coupon_rate_annual": 0.31,   "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.50},
+    {"cusip": "63873MET6", "issuer": "Natixis",          "tickers": ["QCOM", "ARM", "HOOD"],  "coupon_rate_annual": 0.301,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.50},
+    {"cusip": "05619WW64", "issuer": "BNP Paribas",      "tickers": ["NFLX", "UBER", "AFRM"], "coupon_rate_annual": 0.235,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.50},
+    {"cusip": "63873MER0", "issuer": "Natixis",          "tickers": ["TSLA", "NVDA", "CRWD"], "coupon_rate_annual": 0.22,   "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.50},
+    {"cusip": "83372HAB4", "issuer": "Societe Generale", "tickers": ["SPCX", "GS", "FSLR"],   "coupon_rate_annual": 0.215,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.60},
+    {"cusip": "83372H7E2", "issuer": "Societe Generale", "tickers": ["IBM", "NVDA", "TSLA"],  "coupon_rate_annual": 0.20,   "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.60},
+    {"cusip": "05619WY54", "issuer": "BNP Paribas",      "tickers": ["UNH", "INTC", "F"],     "coupon_rate_annual": 0.195,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.50},
+    {"cusip": "05619WX48", "issuer": "BNP Paribas",      "tickers": ["CAT", "LLY", "FCX"],    "coupon_rate_annual": 0.193,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.60},
+    {"cusip": "83372HAA6", "issuer": "Societe Generale", "tickers": ["DE", "JPM", "ALB"],     "coupon_rate_annual": 0.185,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.60},
+    {"cusip": "83372HAL2", "issuer": "Societe Generale", "tickers": ["HD", "BX", "VZ"],       "coupon_rate_annual": 0.14501,"coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.60},
+    {"cusip": "05619WW72", "issuer": "BNP Paribas",      "tickers": ["AAPL", "GS", "META"],   "coupon_rate_annual": 0.135,  "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.60},
+    {"cusip": "05619WW56", "issuer": "BNP Paribas",      "tickers": ["AMZN", "C", "GOOGL"],   "coupon_rate_annual": 0.1275, "coupon_barrier_pct": 0.60, "downside_barrier_pct": 0.60}
+  ]
+}

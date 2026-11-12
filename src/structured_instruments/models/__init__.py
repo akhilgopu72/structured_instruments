@@ -7,6 +7,7 @@ from structured_instruments.models.autocall_event import AutocallEvent
 from structured_instruments.models.position import PortfolioPosition
 from structured_instruments.models.user import User
 from structured_instruments.models.account import Account
+from structured_instruments.models.candidate import CandidateOffering, GmailProcessedAttachment, GmailSyncState, ScreenRun
 
 __all__ = [
     "Underlying",
@@ -19,4 +20,8 @@ __all__ = [
     "PortfolioPosition",
     "User",
     "Account",
+    "CandidateOffering",
+    "ScreenRun",
+    "GmailSyncState",
+    "GmailProcessedAttachment",
 ]

@@ -499,8 +499,29 @@ def get_chart_data(session: Session, account_ids: list[int]) -> list[ChartDataPo
                 "principal": pos.principal,
                 "call_date": call_date,
                 "spy_shares": spy_shares,
+                "barrier": inst.downside_barrier_pct,
+                "initials": {iu.underlying_id: iu.initial_price for iu in inst.underlyings},
             }
         )
+
+    # Closes for every underlying, so a note whose worst performer is below
+    # its downside barrier can be marked at the shares it would deliver at
+    # maturity (principal x worst performance) instead of full principal.
+    underlying_ids = {uid for pr in position_records for uid in pr["initials"]}
+    closes_by_date: dict[date, list[tuple[int, float]]] = {}
+    price_rows = session.execute(
+        select(DailyPrice.date, DailyPrice.underlying_id, DailyPrice.close).where(
+            DailyPrice.underlying_id.in_(underlying_ids),
+            DailyPrice.date >= earliest_purchase - timedelta(days=10),
+            DailyPrice.date <= today,
+        )
+    ).all()
+    for d, uid, close in price_rows:
+        closes_by_date.setdefault(d, []).append((uid, close))
+    pre_start = sorted(d for d in closes_by_date if d < earliest_purchase)
+    last_close: dict[int, float] = {}
+    for d in pre_start:
+        last_close.update(closes_by_date[d])
 
     # Build cumulative paid-coupon schedule from paid coupon events. Called
     # positions' coupons are included — they're realized cash income, and the
@@ -536,7 +557,10 @@ def get_chart_data(session: Session, account_ids: list[int]) -> list[ChartDataPo
     last_spy_price: float | None = None
 
     while current_date <= today:
-        # Active positions: purchased on/before today, not yet called
+        last_close.update(closes_by_date.get(current_date, []))
+
+        # Active positions: purchased on/before today, not yet called. A note
+        # below its downside barrier is worth principal x worst performance.
         active_principal = 0.0
         active_spy_shares = 0.0
         for pr in position_records:
@@ -544,7 +568,14 @@ def get_chart_data(session: Session, account_ids: list[int]) -> list[ChartDataPo
                 continue
             if pr["call_date"] is not None and pr["call_date"] <= current_date:
                 continue
-            active_principal += pr["principal"]
+            perfs = [
+                last_close[uid] / initial
+                for uid, initial in pr["initials"].items()
+                if uid in last_close and initial > 0
+            ]
+            worst = min(perfs, default=1.0)
+            value = pr["principal"] * worst if worst < pr["barrier"] else pr["principal"]
+            active_principal += value
             active_spy_shares += pr["spy_shares"]
 
         # Update cumulative coupon income (step function)

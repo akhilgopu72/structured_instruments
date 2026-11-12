@@ -15,6 +15,7 @@ from structured_instruments.models.position import PortfolioPosition
 from structured_instruments.models.underlying import Underlying
 from structured_instruments.models.user import User
 from structured_instruments.models.valuation_date import ValuationDate
+from structured_instruments.services.candidates import upsert_from_parsed
 from structured_instruments.services.pdf_parser import parse_prospectus_pdf
 
 console = Console()
@@ -51,6 +52,19 @@ def add(
     except Exception as exc:
         console.print(f"[red]API error: {exc}[/red]")
         raise typer.Exit(code=1)
+
+    if parsed.is_preliminary:
+        session = get_session()
+        try:
+            candidate, created = upsert_from_parsed(session, parsed, source="upload", filename=pdf_path.name)
+        finally:
+            session.close()
+        verb = "Added" if created else "Already have"
+        console.print(
+            f"[yellow]Preliminary pricing supplement (no initial prices yet).[/yellow] "
+            f"{verb} candidate {candidate.cusip} for {candidate.offering_month} - see `si screen` / the Modeling tab."
+        )
+        raise typer.Exit(code=0)
 
     # 3. Validate account
     session = get_session()

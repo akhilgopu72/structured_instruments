@@ -281,7 +281,7 @@ export async function postRefresh(): Promise<RefreshResult> {
 export interface ParsedUnderlying {
   ticker: string;
   name: string | null;
-  initial_price: number;
+  initial_price: number | null; // null on preliminary supplements
 }
 
 export interface ParsedValuationDate {
@@ -310,6 +310,7 @@ export interface ParsedFile {
   parsed: ParsedInstrumentData | null;
   error: string | null;
   existing_cusip: boolean;
+  preliminary: boolean; // committing adds a Modeling candidate, not a position
 }
 
 export interface CommitItem {
@@ -321,7 +322,7 @@ export interface CommitItem {
 export interface CommitResultItem {
   filename: string | null;
   cusip: string;
-  status: 'added' | 'position_added' | 'error';
+  status: 'added' | 'position_added' | 'candidate_added' | 'error';
   message: string | null;
   prices_backfilled: Record<string, number>;
 }
@@ -358,4 +359,183 @@ export async function commitInstruments(
   }
   const data: { results: CommitResultItem[] } = await res.json();
   return data.results;
+}
+
+// ── Candidates / Modeling API ──
+
+export interface CandidateOffering {
+  cusip: string;
+  issuer: string;
+  tickers: string[];
+  coupon_rate_annual: number;
+  coupon_barrier_pct: number;
+  downside_barrier_pct: number;
+  autocall_barrier_pct: number;
+  num_observations: number;
+  first_autocall_observation: number;
+  pricing_date: string | null;
+  maturity_date: string | null;
+  offering_month: string;
+  source: string;
+  source_filename: string | null;
+  email_subject: string | null;
+  received_at: string | null;
+  review_notes: string | null;
+  dismissed: boolean;
+}
+
+export interface CandidateMonth {
+  month: string;
+  count: number;
+}
+
+export interface ScreenParams {
+  stake: number;
+  coupon_tax: number;
+  state_tax: number;
+  loss_tax: number;
+  erp: number;
+  reversal: number;
+  reversal_signal: '3m' | '52w';
+}
+
+export interface ReplayResult {
+  windows: number;
+  first_start: string;
+  last_start: string;
+  prob_principal_loss: number;
+  prob_autocall: number;
+  aftertax_return_per_year: number;
+  worst_aftertax_pnl: number;
+}
+
+export interface ScreenResultRow {
+  cusip: string;
+  issuer: string;
+  tickers: string[];
+  coupon_rate_annual: number;
+  downside_barrier_pct: number;
+  sigma: number[];
+  fair_value: number;
+  prob_autocall: number;
+  expected_life_years: number;
+  prob_principal_loss: number;
+  expected_loss_given_breach: number;
+  pretax_return_per_year: number;
+  aftertax_return_per_year: number;
+  cvar_5_aftertax: number;
+  replay: ReplayResult | null;
+  replay_flag: boolean;
+  corr_with_book: number | null;
+  prob_breach_in_book_tail: number | null;
+  tail_add: number | null;
+  max_concentration: [string, number] | null;
+  overlap_tickers: string[];
+}
+
+export interface BookNote {
+  cusip: string;
+  principal: number;
+  levels: { ticker: string; pct: number }[];
+  coupon_barrier_pct: number;
+  downside_barrier_pct: number;
+}
+
+export interface BookSummary {
+  principal: number;
+  expected_aftertax_pnl: number;
+  cvar_5_aftertax: number;
+  prob_any_breach: number;
+  concentration: [string, number][];
+  notes: BookNote[];
+}
+
+export interface TickerSignal {
+  ticker: string;
+  last: number;
+  low_52w: number;
+  high_52w: number;
+  range_position: number;
+  off_high: number;
+  macd_bullish: boolean | null;
+  days_since_cross: number | null;
+  above_200dma: boolean | null;
+  volume_support: number | null;
+  put_oi_support: number | null;
+  put_oi_expiry: string | null;
+  barrier_pct: number;
+}
+
+export interface ScreenResult {
+  risk_free: number;
+  aftertax_hurdle: number;
+  params: ScreenParams & { paths: number };
+  book: BookSummary | null;
+  results: ScreenResultRow[];
+  signals: TickerSignal[];
+}
+
+export interface ScreenRun {
+  id: number;
+  status: 'running' | 'done' | 'error';
+  created_at: string;
+  finished_at: string | null;
+  account_ids: number[];
+  error: string | null;
+  result: ScreenResult | null;
+}
+
+export interface GmailStatus {
+  connected: boolean;
+  syncing: boolean;
+  last_run_at: string | null;
+  last_success_at: string | null;
+  last_added: number;
+  last_error: string | null;
+}
+
+async function sendJson<T>(url: string, method: string, body?: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...userHeaders() },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      detail = (await res.json()).detail ?? detail;
+    } catch {
+      // non-JSON error body
+    }
+    throw new Error(`API error ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+export function fetchCandidateMonths(): Promise<CandidateMonth[]> {
+  return fetchJson('/api/candidates/months');
+}
+
+export function fetchCandidates(month: string): Promise<CandidateOffering[]> {
+  return fetchJson(`/api/candidates/?month=${encodeURIComponent(month)}`);
+}
+
+export function setCandidateDismissed(cusip: string, dismissed: boolean): Promise<CandidateOffering> {
+  return sendJson(`/api/candidates/${cusip}`, 'PATCH', { dismissed });
+}
+
+export function startScreenRun(month: string, params: ScreenParams): Promise<ScreenRun> {
+  return sendJson('/api/candidates/screen', 'POST', { month, ...params });
+}
+
+export function fetchLatestScreenRun(month: string): Promise<ScreenRun | null> {
+  return fetchJson(`/api/candidates/screen/latest?month=${encodeURIComponent(month)}`);
+}
+
+export function fetchGmailStatus(): Promise<GmailStatus> {
+  return fetchJson('/api/candidates/gmail/status');
+}
+
+export function startGmailSync(): Promise<{ started: boolean }> {
+  return sendJson('/api/candidates/gmail/sync', 'POST');
 }

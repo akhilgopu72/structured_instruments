@@ -8,6 +8,7 @@ import InstrumentDetail from './pages/InstrumentDetail';
 import CouponCalendar from './pages/CouponCalendar';
 import Performance from './pages/Performance';
 import AddInstruments from './pages/AddInstruments';
+import Modeling from './pages/Modeling';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,7 @@ function App() {
                   <Route path="/calendar" element={<CouponCalendar />} />
                   <Route path="/performance" element={<Performance />} />
                   <Route path="/add" element={<AddInstruments />} />
+                  <Route path="/modeling" element={<Modeling />} />
                 </Routes>
               </main>
             </div>

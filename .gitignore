@@ -21,3 +21,6 @@ nohup.out
 data/*.db-journal
 data/*.db-wal
 data/*.db-shm
+
+# Gmail OAuth client secret, token, and downloaded prospectuses
+data/gmail/

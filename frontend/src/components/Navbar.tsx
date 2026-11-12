@@ -103,6 +103,9 @@ export default function Navbar() {
             <NavLink to="/performance" className={linkClass}>
               Performance
             </NavLink>
+            <NavLink to="/modeling" className={linkClass}>
+              Modeling
+            </NavLink>
             <NavLink to="/add" className={linkClass}>
               Add
             </NavLink>

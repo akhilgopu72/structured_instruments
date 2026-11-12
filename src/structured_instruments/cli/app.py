@@ -19,6 +19,8 @@ def register_commands():
     from structured_instruments.cli.serve import serve  # noqa: F401
     from structured_instruments.cli.user import user_app  # noqa: F401
     from structured_instruments.cli.account import account_app  # noqa: F401
+    from structured_instruments.cli.screen import screen  # noqa: F401
+    from structured_instruments.cli.candidates import candidates_app, gmail_app  # noqa: F401
 
     app.command()(add)
     app.add_typer(prices_app, name="prices")
@@ -27,6 +29,9 @@ def register_commands():
     app.command()(serve)
     app.add_typer(user_app, name="user")
     app.add_typer(account_app, name="account")
+    app.command()(screen)
+    app.add_typer(candidates_app, name="candidates")
+    app.add_typer(gmail_app, name="gmail")
 
 
 register_commands()

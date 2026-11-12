@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import {
   BarChart,
   Bar,
@@ -33,6 +33,25 @@ function formatCurrency(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function totalReturnPct(principal: number | null, totalCouponIncome: number): number | null {
+  if (principal == null || principal <= 0) return null;
+  return (totalCouponIncome / principal) * 100;
+}
+
+// Simple annualized return over the pricing → call holding period, for called notes.
+function annualizedReturnPct(
+  principal: number | null,
+  totalCouponIncome: number,
+  pricingDate: string,
+  callDate: string | null,
+): number | null {
+  const total = totalReturnPct(principal, totalCouponIncome);
+  if (total == null || callDate == null) return null;
+  const days = differenceInDays(parseISO(callDate), parseISO(pricingDate));
+  if (days <= 0) return null;
+  return (total * 365) / days;
 }
 
 function CouponCountPopover({ count, items }: { count: number; items: { cusip: string; issuer: string; amount: number }[] }) {
@@ -435,6 +454,26 @@ export default function Dashboard() {
                       : '—'}{' '}
                     <span className="text-gray-500">({inst.coupons_missed})</span>
                   </p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Total Return</span>
+                  <p className="text-white">
+                    {(() => {
+                      const total = totalReturnPct(inst.principal, inst.total_coupon_income);
+                      return total != null ? `${total.toFixed(1)}%` : '—';
+                    })()}
+                  </p>
+                  {inst.status === 'called' && (() => {
+                    const annualized = annualizedReturnPct(
+                      inst.principal,
+                      inst.total_coupon_income,
+                      inst.pricing_date,
+                      inst.call_date,
+                    );
+                    return annualized != null ? (
+                      <p className="text-gray-400 text-xs">{annualized.toFixed(1)}% annualized</p>
+                    ) : null;
+                  })()}
                 </div>
               </div>
               {inst.status !== 'called' && (

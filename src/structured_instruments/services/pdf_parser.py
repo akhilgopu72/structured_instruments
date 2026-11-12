@@ -35,7 +35,7 @@ Required JSON schema:
     {
       "ticker": "<string, stock ticker symbol, e.g. 'AAPL'>",
       "name": "<string, company name or null>",
-      "initial_price": <float, initial/reference price on pricing date>
+      "initial_price": <float, initial/reference price on pricing date, or null if not yet set (preliminary supplements show "$[•]")>
     }
   ],
   "valuation_dates": [
@@ -55,7 +55,7 @@ Important extraction guidelines:
    - A COUPON barrier (also called "coupon trigger level" or "observation level") - used to determine if the monthly coupon is paid.
    - A DOWNSIDE barrier (also called "knock-in level", "principal barrier", "downside threshold", "buffer level") - used at maturity to determine if principal is at risk. This may be LOWER than the coupon barrier.
    If only one barrier percentage is listed, use it for both.
-5. For underlyings, extract the ticker symbol and initial price. These notes are typically linked to 3 stocks.
+5. For underlyings, extract the ticker symbol (exchange symbol like "AAPL", not a Bloomberg code like "AAPL UW") and initial price. These notes are typically linked to 3 stocks. Preliminary pricing supplements are issued before the pricing date: initial prices are blank, so return null for them, and use bracketed indicative terms like "[60]%" as the values.
 6. For valuation/observation dates: list ALL monthly observation dates. Early observation dates (typically the first ~3-6 months) are usually NOT autocall eligible. Later dates ARE autocall eligible. Check the document for which dates have "autocall review" or "early redemption" eligibility.
 7. All dates must be in YYYY-MM-DD format.
 8. All percentage values must be expressed as decimals (60% = 0.60, 10.21% = 0.1021).

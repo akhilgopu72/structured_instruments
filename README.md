@@ -43,6 +43,32 @@ si status     # portfolio status
 si serve      # start the API
 ```
 
+## Modeling tab (candidate notes)
+
+Offered notes (preliminary pricing supplements) are scored before purchase on
+the **Modeling** tab: Monte Carlo + historical replay, fit against the selected
+accounts' existing book, and per-ticker 52-week / MACD / support diagnostics.
+
+Candidates get in three ways:
+
+- **Add page** — drop a preliminary supplement PDF; it's parsed with the same
+  parser as final prospectuses and, since it has no initial prices yet, lands
+  on Modeling instead of in the portfolio.
+- **Gmail** — the API server polls every 30 min (`SI_GMAIL_POLL_MINUTES`, 0 to
+  disable) for `label:Rahul subject:"STRUCTURED NOTE"` emails (`SI_GMAIL_QUERY`)
+  and parses new PDF attachments. One-time setup, in the Google account that
+  receives the emails:
+  1. Google Cloud Console → enable the Gmail API → create an OAuth client of
+     type *Desktop app* → download its JSON to `data/gmail/credentials.json`.
+  2. `.venv/bin/si gmail auth` (opens a browser; grants read-only access).
+  3. Restart `si serve`. `si gmail sync` runs a sync by hand.
+  `data/gmail/` (secret, token, downloaded PDFs) is git-ignored. Each
+  attachment is parsed at most once (`gmail_processed_attachment`).
+- **JSON** — `si candidates import data/candidates/2026-10.json`.
+
+CLI equivalents: `si candidates list --month 2026-10`,
+`si screen --month 2026-10 --account-id 1`.
+
 ## API notes
 
 - Endpoints require an **`X-User-Id` header containing an integer** (e.g. `1`);

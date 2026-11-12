@@ -55,11 +55,17 @@ class ParsedInstrumentData(BaseModel):
     underlyings: list["ParsedUnderlying"]
     valuation_dates: list["ParsedValuationDate"]
 
+    @property
+    def is_preliminary(self) -> bool:
+        """Preliminary pricing supplements are parsed before the pricing date,
+        so initial prices are still blank ("$[•]")."""
+        return any(u.initial_price is None for u in self.underlyings)
+
 
 class ParsedUnderlying(BaseModel):
     ticker: str
     name: str | None = None
-    initial_price: float
+    initial_price: float | None = None
 
 
 class ParsedValuationDate(BaseModel):
